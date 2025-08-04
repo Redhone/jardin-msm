@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>VR Museum Tour</title>
+  <!-- A-Frame Core -->
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <!-- A-Frame Extras for WASD controls -->
+  <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    #enter-vr-button {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 9999;
+    }
+    #mobile-controls {
+      position: fixed;
+      bottom: 20px;
+      left:20px;
+      display: none;
+      justify-content: center;
+      gap: 10px;
+      z-index: 0;
+    }
+    #mobile-controls button {
+      padding: 15px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-size: 20px;
+    }
+    .teleport-spot {
+      cursor: pointer;
+    }
+    .teleport-spot:hover {
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <!-- VR Scene -->
+  <a-scene vr-mode-ui="enabled: true" loading-screen="dotsColor: #0080e5; backgroundColor: #000000" renderer="antialias: true">
+
+    <!-- ===== 3D MODEL ===== -->
+    <a-entity id="museum" gltf-model="url(../jardin-compressed.glb)" scale="1 1 1"></a-entity>
+
+    <!-- ===== TELEPORTATION TARGETS (FIXED) ===== -->
+     <!-- take me to the garden -->
+     <a-entity class="clickable teleport-spot" 
+              geometry="primitive: circle; radius: 0.5" 
+              material="color: #00E6FF; opacity: 0.8" 
+              position="2 4 -3"
+              data-teleport="12.5 3.6 -12.5">
+      <a-text value="VISIT AREA 2" align="center" position="0 -0.5 0" color="white"></a-text>
+    </a-entity>
+
+     <a-entity class="clickable teleport-spot" 
+              geometry="primitive: circle; radius: 0.5" 
+              material="color: #FF0000; opacity: 0.8" 
+              position="1 4 -12.5"
+              rotation="0 90 0"
+              data-teleport="0 3.6 0">
+      <a-text value="GO BACK" align="center" position="0 -0.5 0" color="white"></a-text>
+    </a-entity>
+
+
+     <a-entity class="clickable teleport-spot" 
+              geometry="primitive: circle; radius: 0.5" 
+              material="color: #FFF000; opacity: 0.8" 
+              position="20 4 -12.5"
+              rotation="0 -90 0"
+              data-teleport="40 3.6 -16">
+      <a-text value="ENTER ROOM" align="center" position="0 -0.5 0" color="white"></a-text>
+    </a-entity>
+
+     <a-entity class="clickable teleport-spot" 
+              geometry="primitive: circle; radius: 0.5" 
+              material="color: #FF0000; opacity: 0.8" 
+              position="36 4 -16"
+              rotation="0 90 0"
+              data-teleport="12.5 3.6 -12.5">
+      <a-text value="EXIT ROOM" align="center" position="0 -0.5 0" color="white"></a-text>
+    </a-entity>
+
+
+     <a-entity class="clickable teleport-spot" 
+              geometry="primitive: circle; radius: 0.5" 
+              material="color: #A200FF; opacity: 0.8" 
+              position="-1 4 -3"
+              data-teleport="8 3.6 10">
+      <a-text value="VISIT AREA 1" align="center" position="0 -0.5 0" color="white"></a-text>
+    </a-entity>
+     <a-entity class="clickable teleport-spot" 
+              geometry="primitive: circle; radius: 0.5" 
+              material="color: #FF0000; opacity: 0.8" 
+              position="8 4 5"
+              data-teleport="0 3.6 0">
+      <a-text value="GO BACK" align="center" position="0 -0.5 0" color="white"></a-text>
+    </a-entity>
+
+
+
+
+    <!-- ===== CAMERA RIG WITH PROPER CONTROLS ===== -->
+    <a-entity id="camera-rig" position="0 3.6 0">
+      <a-entity id="camera" 
+                camera="fov: 80" 
+                look-controls="pointerLockEnabled: true"
+                wasd-controls="enabled: true; acceleration: 65"
+                cursor="rayOrigin: mouse; fuseTimeout: 1500">
+        <a-cursor fuse="true" raycaster="objects: .clickable"></a-cursor>
+      </a-entity>
+    </a-entity>
+
+    <!-- ===== LIGHTING ===== -->
+    <a-entity light="type: ambient; color: #BBB"></a-entity>
+    <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-0.5 1 0"></a-entity>
+
+    <!-- ===== INFO PANELS ===== -->
+    <a-entity id="info-panel" visible="false" position="0 3.5 -1.5" 
+              geometry="primitive: plane; width: 1.5; height: 1" 
+              material="color: #333; opacity: 0.9">
+      <a-text id="info-text" value="Hover on exhibits for info" align="center" width="1.4" position="0 0 0.01" color="white"></a-text>
+      <a-entity class="clickable close-button" position="0.7 0.4 0.01" 
+                geometry="primitive: plane; width: 0.2; height: 0.2" 
+                material="color: #FF5252">
+        <a-text value="X" align="center" position="0 0 0.01" color="white"></a-text>
+      </a-entity>
+    </a-entity>
+
+    <!-- ===== EXAMPLE EXHIBIT ===== -->
+    <a-entity class="clickable exhibit" position="0.75 3 -2.5" 
+              geometry="primitive: box; width: 0.5; height: 0.5; depth: 0.5" 
+              material="color: orangered" 
+              data-info="EXPLORE THIS ANCIENT BEAUTIFUL GARDEN.">
+      <a-text value="ABOUT" align="center" position="0 -0.4 0.26" rotation="0 0 0" color="white"></a-text>
+    </a-entity>
+
+    <!-- ===== SKY (fallback if no model) ===== -->
+    <a-sky color="#ECECEC"></a-sky>
+  </a-scene>
+
+  <!-- ===== UI ELEMENTS ===== -->
+   <button id="enter-vr-button">ENTER VR</button>
+  <div id="mobile-controls">
+    <button id="move-forward">↑</button>
+    <button id="move-left">←</button>
+    <button id="move-right">→</button>
+  </div>
+ 
+  <!-- ===== JAVASCRIPT ===== -->
+  <script>
+    // === ENTER VR BUTTON ===
+    document.getElementById('enter-vr-button').addEventListener('click', () => {
+      const scene = document.querySelector('a-scene');
+      if (scene.is('vr-mode')) {
+        scene.exitVR();
+        document.getElementById('enter-vr-button').textContent = 'ENTER VR';
+      } else {
+        scene.enterVR();
+        document.getElementById('enter-vr-button').textContent = 'EXIT VR';
+      }
+    });
+
+    // === IMPROVED TELEPORTATION SYSTEM ===
+    function teleportTo(position) {
+      const cameraRig = document.getElementById('camera-rig');
+      cameraRig.setAttribute('animation', {
+        property: 'position',
+        to: position,
+        dur: 500,
+        easing: 'easeOutQuad'
+      });
+      
+      // Remove animation after it completes
+      setTimeout(() => {
+        cameraRig.removeAttribute('animation');
+      }, 500);
+    }
+
+    document.querySelectorAll('.teleport-spot').forEach(spot => {
+      // Click event for desktop
+      spot.addEventListener('click', function() {
+        const posStr = this.getAttribute('data-teleport');
+        const pos = posStr.split(' ').map(Number);
+        if (pos.length === 3) {
+          teleportTo({x: pos[0], y: pos[1], z: pos[2]});
+        }
+      });
+      
+      // Fuse event for VR gaze
+      spot.addEventListener('fusing', function(e) {
+        if (e.detail.triggered) {
+          const posStr = this.getAttribute('data-teleport');
+          const pos = posStr.split(' ').map(Number);
+          if (pos.length === 3) {
+            teleportTo({x: pos[0], y: pos[1], z: pos[2]});
+          }
+        }
+      });
+    });
+
+    // === EXHIBIT INFO ===
+    document.querySelectorAll('.exhibit').forEach(exhibit => {
+      exhibit.addEventListener('click', () => {
+        const info = exhibit.getAttribute('data-info');
+        document.querySelector('#info-text').setAttribute('value', info);
+        document.querySelector('#info-panel').setAttribute('visible', 'true');
+      });
+      
+      // Show info on gaze in VR
+      exhibit.addEventListener('fusing', (e) => {
+        if (e.detail.triggered) {
+          const info = exhibit.getAttribute('data-info');
+          document.querySelector('#info-text').setAttribute('value', info);
+          document.querySelector('#info-panel').setAttribute('visible', 'true');
+        }
+      });
+    });
+
+    // Close info panel
+    document.querySelector('.close-button').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelector('#info-panel').setAttribute('visible', 'false');
+    });
+
+    // === MOBILE CONTROLS (for non-VR) ===
+    if (/Mobi|Android/i.test(navigator.userAgent)) {
+      const controls = document.getElementById('mobile-controls');
+      const cameraRig = document.getElementById('camera-rig');
+      const moveSpeed = 0.1;
+      let isMoving = false;
+
+      controls.style.display = 'flex';
+
+      // Movement functions
+      const moveForward = () => {
+        if (isMoving) return;
+        isMoving = true;
+        
+        const rotation = cameraRig.getAttribute('rotation');
+        const rad = THREE.MathUtils.degToRad(rotation.y);
+        const position = cameraRig.getAttribute('position');
+        
+        cameraRig.setAttribute('position', {
+          x: position.x - Math.sin(rad) * moveSpeed,
+          y: position.y,
+          z: position.z - Math.cos(rad) * moveSpeed
+        });
+        
+        setTimeout(() => { isMoving = false; }, 100);
+      };
+
+      const moveLeft = () => {
+        if (isMoving) return;
+        isMoving = true;
+        
+        const rotation = cameraRig.getAttribute('rotation');
+        const rad = THREE.MathUtils.degToRad(rotation.y - 90);
+        const position = cameraRig.getAttribute('position');
+        
+        cameraRig.setAttribute('position', {
+          x: position.x - Math.sin(rad) * moveSpeed,
+          y: position.y,
+          z: position.z - Math.cos(rad) * moveSpeed
+        });
+        
+        setTimeout(() => { isMoving = false; }, 100);
+      };
+
+      const moveRight = () => {
+        if (isMoving) return;
+        isMoving = true;
+        
+        const rotation = cameraRig.getAttribute('rotation');
+        const rad = THREE.MathUtils.degToRad(rotation.y + 90);
+        const position = cameraRig.getAttribute('position');
+        
+        cameraRig.setAttribute('position', {
+          x: position.x - Math.sin(rad) * moveSpeed,
+          y: position.y,
+          z: position.z - Math.cos(rad) * moveSpeed
+        });
+        
+        setTimeout(() => { isMoving = false; }, 100);
+      };
+
+      // Touch events
+      document.getElementById('move-forward').addEventListener('touchstart', moveForward);
+      document.getElementById('move-forward').addEventListener('touchend', () => { isMoving = false; });
+      document.getElementById('move-left').addEventListener('touchstart', moveLeft);
+      document.getElementById('move-left').addEventListener('touchend', () => { isMoving = false; });
+      document.getElementById('move-right').addEventListener('touchstart', moveRight);
+      document.getElementById('move-right').addEventListener('touchend', () => { isMoving = false; });
+
+      // Keyboard fallback
+      document.addEventListener('keydown', (e) => {
+        switch(e.key) {
+          case 'w': case 'ArrowUp': moveForward(); break;
+          case 'a': case 'ArrowLeft': moveLeft(); break;
+          case 'd': case 'ArrowRight': moveRight(); break;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
